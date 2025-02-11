@@ -1,0 +1,1 @@
+python teste_mao.py
