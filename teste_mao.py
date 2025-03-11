@@ -6,6 +6,8 @@ import multiprocessing as mp_proc
 import threading
 import time
 
+
+
 def process_camera(frame_queue):
     camera = cv2.VideoCapture(0)
     mp_hands = mp.solutions.hands
@@ -32,13 +34,16 @@ def process_camera(frame_queue):
 
 def pygame_loop(frame_queue):
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     clock = pygame.time.Clock()
     font = pygame.font.Font(None, 36)  # Font for FPS display
 
     running = True
     while running:
         start_time = time.time()  # Start frame time
+        
+        WIDTH, HEIGHT = SCREEN.get_width(), SCREEN.get_height()
+        pygame.display.set_caption("Menu Principal")
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -50,12 +55,12 @@ def pygame_loop(frame_queue):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = np.rot90(frame)
             frame = pygame.surfarray.make_surface(frame)
-            screen.blit(frame, (0, 0))
+            SCREEN.blit(frame, (0, 0))
 
         # Calculate FPS
         fps = int(clock.get_fps())
         fps_text = font.render(f"FPS: {fps}", True, (0, 255, 0))
-        screen.blit(fps_text, (10, 10))
+        SCREEN.blit(fps_text, (10, 10))
 
         pygame.display.flip()
         clock.tick(60)  # Set target FPS to 60
