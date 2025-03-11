@@ -1,10 +1,12 @@
+#Otimizar/simplificar codigo
+
 import pygame
 import sys
 import webbrowser
 
 pygame.init()
 pygame.mixer.init() 
-pygame.mixer.music.load('Desktop\musica.mp3')  
+pygame.mixer.music.load('musica.mp3')  
 pygame.mixer.music.set_volume(0.5)  
 pygame.mixer.music.play(-1, 0.0) 
 
@@ -60,6 +62,7 @@ show_settings = False
 
 # Botão de Voltar no menu de definições
 back_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT - 150, 200, 50)
+back_button2 = pygame.Rect(WIDTH // 2 - 100, HEIGHT - 155, 200, 50)
 
 show_settings = False
 show_credits = False  # Nova variável para o menu de créditos
@@ -123,27 +126,30 @@ def draw_menu():
         SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 4 + 20))
 
         # Opção de Efeitos Sonoros (Checkbox)
-        checkbox_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT // 4 + 100, 20, 20)
+        checkbox_rect = pygame.Rect(WIDTH // 2 - 90, HEIGHT // 4 + 100, 20, 20)
+
         pygame.draw.rect(SCREEN, WHITE, checkbox_rect, border_radius=5)
         if sound_effects_enabled:
-            pygame.draw.line(SCREEN, BLACK, (checkbox_rect.x + 4, checkbox_rect.y + 10), (checkbox_rect.x + 10, checkbox_rect.y + 16), 3)
-            pygame.draw.line(SCREEN, BLACK, (checkbox_rect.x + 10, checkbox_rect.y + 16), (checkbox_rect.x + 16, checkbox_rect.y + 4), 3)
+            pygame.draw.line(SCREEN, GRAY, (checkbox_rect.x + 4, checkbox_rect.y + 10), (checkbox_rect.x + 10, checkbox_rect.y + 16), 3)
+            pygame.draw.line(SCREEN, GRAY, (checkbox_rect.x + 10, checkbox_rect.y + 16), (checkbox_rect.x + 16, checkbox_rect.y + 4), 3)
+
         sound_text = FONT.render("Efeitos Sonoros", True, WHITE)
-        SCREEN.blit(sound_text, (checkbox_rect.x + 30, checkbox_rect.y - 5))
+        SCREEN.blit(sound_text, (checkbox_rect.x + 30, checkbox_rect.y + 2))
+
 
         # Slider para controle do volume da música
         slider_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 4 + 150, 200, 10)
         pygame.draw.rect(SCREEN, WHITE, slider_rect)
         handle_x = int(slider_rect.x + (music_volume * slider_rect.width))
-        pygame.draw.circle(SCREEN, RED, (handle_x, slider_rect.y + 5), 8)
+        pygame.draw.circle(SCREEN, DARK_RED, (handle_x, slider_rect.y + 5), 8)
         music_text = FONT.render("Música", True, WHITE)
         SCREEN.blit(music_text, (slider_rect.x, slider_rect.y - 25))
 
         # Botão de Voltar
-        back_color = (255, 0, 0) if back_button.collidepoint(pygame.mouse.get_pos()) else (200, 0, 0)
-        pygame.draw.rect(SCREEN, back_color, back_button, border_radius=10)
+        back_color = (255, 0, 0) if back_button2.collidepoint(pygame.mouse.get_pos()) else (200, 0, 0)
+        pygame.draw.rect(SCREEN, back_color, back_button2, border_radius=10)
         back_text = FONT.render("Voltar", True, WHITE)
-        SCREEN.blit(back_text, (back_button.x + (back_button.width - back_text.get_width()) // 2, back_button.y + 15))
+        SCREEN.blit(back_text, (back_button2.x + (back_button2.width - back_text.get_width()) // 2, back_button2.y + 15))
 
     elif show_credits:
         draw_credits()  # Chama a função que desenha os créditos
@@ -211,13 +217,26 @@ def draw_menu():
 
     pygame.display.flip()
 
-# Atualização da lógica de controle de eventos para o botão de créditos
 running = True
 while running:
     draw_menu()
 
+
+    slider_dragging = False
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            if checkbox_rect.collidepoint(mouse_x, mouse_y):
+                sound_effects_enabled = not sound_effects_enabled
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                slider_dragging = False
+            elif event.type == pygame.MOUSEMOTION and slider_dragging:
+                mouse_x = event.pos[0]
+                new_volume = (mouse_x - slider_rect.x) / slider_rect.width
+                music_volume = max(0, min(1, new_volume))  # Garante que o volume fica entre 0 e 1
+                pygame.mixer.music.set_volume(music_volume)
+        elif event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             running = False
