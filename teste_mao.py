@@ -9,11 +9,6 @@ import time
 
 def process_camera(frame_queue, screen_size):
     camera = cv2.VideoCapture(0)
-    
-    # Ajustar a resolução da câmera para Full HD (1920x1080)
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands()
     mp_draw = mp.solutions.drawing_utils
@@ -52,7 +47,7 @@ def process_camera(frame_queue, screen_size):
 def pygame_loop(frame_queue):
     pygame.init()
     
-    # Configurar ecrã completo com resolução 1920x1080
+    # Configurar ecrã completo
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_size = screen.get_size()
     clock = pygame.time.Clock()
