@@ -6,10 +6,10 @@ import multiprocessing as mp_proc
 import threading
 import time
 
-
-
-def process_camera(frame_queue):
+def process_camera(frame_queue, width, height):
 	camera = cv2.VideoCapture(0)
+	camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+	camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 	mp_hands = mp.solutions.hands
 	hands = mp_hands.Hands()
 	mp_draw = mp.solutions.drawing_utils
@@ -19,7 +19,6 @@ def process_camera(frame_queue):
 		if not success:
 			continue
 
-		# frame = cv2.flip(frame, 1)
 		image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 		results = hands.process(image_rgb)
 
@@ -30,7 +29,6 @@ def process_camera(frame_queue):
 		if frame_queue.full():
 			frame_queue.get()  # Remove old frame to prevent lag
 		frame_queue.put(frame)
-
 
 def pygame_loop(frame_queue):
 	pygame.init()
@@ -69,10 +67,14 @@ def pygame_loop(frame_queue):
 
 	pygame.quit()
 
-
 if __name__ == "__main__":
+	pygame.init()
+	info = pygame.display.Info()
+	width, height = info.current_w, info.current_h
+	pygame.quit()
+
 	frame_queue = mp_proc.Queue(maxsize=1)  # Limit queue size to prevent lag
-	camera_process = mp_proc.Process(target=process_camera, args=(frame_queue,))
+	camera_process = mp_proc.Process(target=process_camera, args=(frame_queue, width, height))
 	camera_process.start()
 	
 	pygame_thread = threading.Thread(target=pygame_loop, args=(frame_queue,))
