@@ -58,7 +58,7 @@ def pygame_loop(frame_queue):
         screen.blit(fps_text, (10, 10))
 
         pygame.display.flip()
-        clock.tick(60)  # Set target FPS to 60
+        clock.tick(1000)  # Set target FPS to 60
 
     pygame.quit()
 
