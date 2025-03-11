@@ -6,6 +6,8 @@ import multiprocessing as mp_proc
 import threading
 import time
 
+
+
 def process_camera(frame_queue):
 	camera = cv2.VideoCapture(0)
 	mp_hands = mp.solutions.hands
@@ -32,7 +34,7 @@ def process_camera(frame_queue):
 
 def pygame_loop(frame_queue):
 	pygame.init()
-	screen = pygame.display.set_mode((800, 600))
+	screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 	clock = pygame.time.Clock()
 	font = pygame.font.Font(None, 36)  # Font for FPS display
 
