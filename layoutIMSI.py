@@ -26,6 +26,9 @@ LIGHT_RED = (255, 50, 50)
 BUTTON_TEXTS = ["Jogo \"Desenho\"", "Jogo \"Movimentos\""]
 BUTTON_RECTS = []
 
+sound_effects_enabled = True
+music_volume = 50
+
 # Top 3 jogadores fictícios
 top_players = ["1. João", "2. Maria", "3. Pedro"]
 
@@ -119,9 +122,22 @@ def draw_menu():
         title = TITLE_FONT.render("Definições", True, WHITE)
         SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 4 + 20))
 
-        # Aqui você pode adicionar opções de definições, por exemplo:
-        settings_option = FONT.render("Efeitos Sonoros (Checkbox); Musica (Range);", True, WHITE)
-        SCREEN.blit(settings_option, (WIDTH // 2 - settings_option.get_width() // 2, HEIGHT // 4 + 100))
+        # Opção de Efeitos Sonoros (Checkbox)
+        checkbox_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT // 4 + 100, 20, 20)
+        pygame.draw.rect(SCREEN, WHITE, checkbox_rect, border_radius=5)
+        if sound_effects_enabled:
+            pygame.draw.line(SCREEN, BLACK, (checkbox_rect.x + 4, checkbox_rect.y + 10), (checkbox_rect.x + 10, checkbox_rect.y + 16), 3)
+            pygame.draw.line(SCREEN, BLACK, (checkbox_rect.x + 10, checkbox_rect.y + 16), (checkbox_rect.x + 16, checkbox_rect.y + 4), 3)
+        sound_text = FONT.render("Efeitos Sonoros", True, WHITE)
+        SCREEN.blit(sound_text, (checkbox_rect.x + 30, checkbox_rect.y - 5))
+
+        # Slider para controle do volume da música
+        slider_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 4 + 150, 200, 10)
+        pygame.draw.rect(SCREEN, WHITE, slider_rect)
+        handle_x = int(slider_rect.x + (music_volume * slider_rect.width))
+        pygame.draw.circle(SCREEN, RED, (handle_x, slider_rect.y + 5), 8)
+        music_text = FONT.render("Música", True, WHITE)
+        SCREEN.blit(music_text, (slider_rect.x, slider_rect.y - 25))
 
         # Botão de Voltar
         back_color = (255, 0, 0) if back_button.collidepoint(pygame.mouse.get_pos()) else (200, 0, 0)
