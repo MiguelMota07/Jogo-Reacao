@@ -31,41 +31,39 @@ def process_camera(frame_queue, width, height):
 		frame_queue.put(frame)
 
 def pygame_loop(frame_queue):
-	pygame.init()
-	screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-	clock = pygame.time.Clock()
-	font = pygame.font.Font(None, 36)  # Font for FPS display
+    pygame.init()
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen_width, screen_height = screen.get_size()  # Get the actual screen dimensions
+    clock = pygame.time.Clock()
+    font = pygame.font.Font(None, 36)  # Font for FPS display
 
-	running = True
-	while running:
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-				running = False
-				break
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                running = False
+                break
 
-		start_time = time.time()  # Start frame time
-		
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				running = False
-				break
+        # Remove the duplicate event processing loop
+        
+        if not frame_queue.empty():
+            frame = frame_queue.get()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = np.rot90(frame)
+            frame = pygame.surfarray.make_surface(frame)
+            # Scale the camera feed to fill the entire screen
+            frame = pygame.transform.scale(frame, (screen_width, screen_height))
+            screen.blit(frame, (0, 0))
 
-		if not frame_queue.empty():
-			frame = frame_queue.get()
-			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-			frame = np.rot90(frame)
-			frame = pygame.surfarray.make_surface(frame)
-			screen.blit(frame, (0, 0))
+        # Calculate FPS
+        fps = int(clock.get_fps())
+        fps_text = font.render(f"FPS: {fps}", True, (0, 255, 0))
+        screen.blit(fps_text, (10, 10))
 
-		# Calculate FPS
-		fps = int(clock.get_fps())
-		fps_text = font.render(f"FPS: {fps}", True, (0, 255, 0))
-		screen.blit(fps_text, (10, 10))
+        pygame.display.flip()
+        clock.tick(60)  # Set target FPS to 60
 
-		pygame.display.flip()
-		clock.tick(60)  # Set target FPS to 60
-
-	pygame.quit()
+    pygame.quit()
 
 if __name__ == "__main__":
 	pygame.init()
