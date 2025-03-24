@@ -6,7 +6,7 @@ import random
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.music.load('musica.mp3')
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0.15)
 pygame.mixer.music.play(-1)
 
 # Configurações Gerais
@@ -29,10 +29,14 @@ FONT = pygame.font.SysFont('arial', 26)
 TITLE_FONT = pygame.font.SysFont('arial', 72, bold=True)
 SUB_FONT = pygame.font.SysFont('arial', 32, bold=True)
 
+click_sound = pygame.mixer.Sound("Click.mp3")
+click_sound.set_volume(0.15)  # Set volume on the specific sound object
+
+
 # Botões e Textos
 BUTTONS = [
     {"text": "JOGAR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 - 100, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
-    {"text": "RANKING", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
+    #{"text": "RANKING", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "DEFINIÇÕES", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 100, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "CRÉDITOS", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 200, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "SAIR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": RED, "hover": HOVER_RED},
@@ -51,7 +55,7 @@ show_settings = False
 back_button = {"text": "VOLTAR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 200, 340, 80), "color": BLUE, "hover": HOVER_BLUE}
 
 # Variáveis de configuração
-volume_music = 0.5
+volume_music = 0.15
 sound_effects = True
 
 def draw_button(button, mouse_pos):
@@ -138,29 +142,42 @@ def draw_settings_menu():
     
     # Ajuste de volume de música
     volume_text = FONT.render(f"Volume Música: {int(volume_music * 100)}%", True, WHITE)
-    SCREEN.blit(volume_text, (WIDTH // 2 - volume_text.get_width() // 2, 200))
-    
-    # Botões para ajustar volume
+    volume_text_pos = (WIDTH // 2 - volume_text.get_width() // 2, 250)
+    SCREEN.blit(volume_text, volume_text_pos)
+
+    mouse_pos = pygame.mouse.get_pos()
+
+    # Definir os rects dos botões + e -
+    minus_rect = pygame.Rect(WIDTH // 2 - 175, 250, 50, 50)
+    plus_rect = pygame.Rect(WIDTH // 2 + 125, 250, 50, 50)
+
+    # Verificar hover e definir cor
+    minus_color = HOVER_BLUE if minus_rect.collidepoint(mouse_pos) else BLUE
+    plus_color = HOVER_BLUE if plus_rect.collidepoint(mouse_pos) else BLUE
+
+    # Desenhar os botões
+    pygame.draw.rect(SCREEN, minus_color, minus_rect, border_radius=12)
+    pygame.draw.rect(SCREEN, plus_color, plus_rect, border_radius=12)
+
+    # Desenhar os símbolos + e -
     plus_button = FONT.render("+", True, WHITE)
     minus_button = FONT.render("-", True, WHITE)
-    pygame.draw.rect(SCREEN, BLUE, pygame.Rect(WIDTH // 2 - 100, 250, 50, 50), border_radius=12)
-    pygame.draw.rect(SCREEN, BLUE, pygame.Rect(WIDTH // 2 + 50, 250, 50, 50), border_radius=12)
-    
-    SCREEN.blit(plus_button, (WIDTH // 2 + 50 + 25 - plus_button.get_width() // 2, 250 + 25 - plus_button.get_height() // 2))
-    SCREEN.blit(minus_button, (WIDTH // 2 - 100 + 25 - minus_button.get_width() // 2, 250 + 25 - minus_button.get_height() // 2))
-    
+    SCREEN.blit(minus_button, (minus_rect.centerx - minus_button.get_width() // 2, minus_rect.centery - minus_button.get_height() // 2))
+    SCREEN.blit(plus_button, (plus_rect.centerx - plus_button.get_width() // 2, plus_rect.centery - plus_button.get_height() // 2))
+
     # Efeitos sonoros
     sound_text = FONT.render(f"Efeitos Sonoros: {'Ativos' if sound_effects else 'Desativados'}", True, WHITE)
     SCREEN.blit(sound_text, (WIDTH // 2 - sound_text.get_width() // 2, 350))
-    
+
     # Botão para ativar/desativar efeitos sonoros
     sound_button_color = BLUE if sound_effects else RED
-    draw_button({"text": "Ativar/Desativar Efeitos Sonoros", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": sound_button_color, "hover": HOVER_BLUE}, pygame.mouse.get_pos())
-    
+    draw_button({"text": "Ativar/Desativar Efeitos Sonoros", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": sound_button_color, "hover": HOVER_BLUE}, mouse_pos)
+
     # Botão Voltar
-    draw_button(back_button, pygame.mouse.get_pos())
-    
+    draw_button(back_button, mouse_pos)
+
     pygame.display.flip()
+
 
 
 # Exemplo de loop principal
@@ -179,21 +196,28 @@ while True:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            if show_credits:  # Se estamos no menu de créditos
+        
+            # Tocar o som de clique
+            if sound_effects:
+                click_sound.play()
+            
+            if show_credits:  
                 if back_button["rect"].collidepoint(mouse_pos):
-                    show_credits = False  # Volta para o menu principal
-            elif show_settings:  # Se estamos no menu de definições
+                    show_credits = False  
+            elif show_settings:  
                 if back_button["rect"].collidepoint(mouse_pos):
-                    show_settings = False  # Volta para o menu principal
-                elif pygame.Rect(WIDTH // 2 - 100, 250, 50, 50).collidepoint(mouse_pos):  # Botão de diminuir volume
-                    volume_music = max(0, volume_music - 0.05)
+                    show_settings = False  
+                elif pygame.Rect(WIDTH // 2 - 175, 250, 50, 50).collidepoint(mouse_pos):  
+                    if volume_music > 0:
+                        volume_music -= 0.05
                     pygame.mixer.music.set_volume(volume_music)
-                elif pygame.Rect(WIDTH // 2 + 50, 250, 50, 50).collidepoint(mouse_pos):  # Botão de aumentar volume
-                    volume_music = min(1, volume_music + 0.05)
+                elif pygame.Rect(WIDTH // 2 + 125, 250, 50, 50).collidepoint(mouse_pos):  
+                    if volume_music < 1:
+                        volume_music += 0.05
                     pygame.mixer.music.set_volume(volume_music)
-                elif pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80).collidepoint(mouse_pos):  # Botão de ativar/desativar efeitos sonoros
+                elif pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80).collidepoint(mouse_pos):  
                     sound_effects = not sound_effects
-            else:  # Se estamos no menu principal
+            else:  
                 for button in BUTTONS:
                     if button["rect"].collidepoint(mouse_pos):
                         if button["text"] == "SAIR":
@@ -202,11 +226,12 @@ while True:
                         elif button["text"] == "JOGAR":
                             print("Iniciar o Jogo...")
                         elif button["text"] == "RANKING":
-                            webbrowser.open("http://localhost")  # Abre a página localhost
+                            webbrowser.open("http://localhost")
                         elif button["text"] == "DEFINIÇÕES":
-                            show_settings = True  # Exibe o menu de definições
+                            show_settings = True  
                         elif button["text"] == "CRÉDITOS":
-                            show_credits = True  # Exibe o menu de créditos
+                            show_credits = True  
+
 
     clock.tick(60)
 
