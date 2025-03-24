@@ -23,7 +23,7 @@ def process_camera(frame_queue, width, height):
 		results = hands.process(image_rgb)
 
 		if results.multi_hand_landmarks:
-			for hand_landmarks in results.multi_hand_landmarks:
+			for hand_idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
 				mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 		
 		if frame_queue.full():
