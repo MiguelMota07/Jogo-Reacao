@@ -6,7 +6,7 @@ import random
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.music.load('musica.mp3')
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0.15)
 pygame.mixer.music.play(-1)
 
 # Configurações Gerais
@@ -29,10 +29,14 @@ FONT = pygame.font.SysFont('arial', 26)
 TITLE_FONT = pygame.font.SysFont('arial', 72, bold=True)
 SUB_FONT = pygame.font.SysFont('arial', 32, bold=True)
 
+click_sound = pygame.mixer.Sound("Click.mp3")
+click_sound.set_volume(0.15)  # Set volume on the specific sound object
+
+
 # Botões e Textos
 BUTTONS = [
     {"text": "JOGAR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 - 100, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
-    {"text": "RANKING", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
+    #{"text": "RANKING", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "DEFINIÇÕES", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 100, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "CRÉDITOS", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 200, 340, 80), "color": BLUE, "hover": HOVER_BLUE},
     {"text": "SAIR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": RED, "hover": HOVER_RED},
@@ -51,7 +55,7 @@ show_settings = False
 back_button = {"text": "VOLTAR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 200, 340, 80), "color": BLUE, "hover": HOVER_BLUE}
 
 # Variáveis de configuração
-volume_music = 0.5
+volume_music = 0.15
 sound_effects = True
 
 def draw_button(button, mouse_pos):
@@ -192,23 +196,28 @@ while True:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            if show_credits:  # Se estamos no menu de créditos
+        
+            # Tocar o som de clique
+            if sound_effects:
+                click_sound.play()
+            
+            if show_credits:  
                 if back_button["rect"].collidepoint(mouse_pos):
-                    show_credits = False  # Volta para o menu principal
-            elif show_settings:  # Se estamos no menu de definições
+                    show_credits = False  
+            elif show_settings:  
                 if back_button["rect"].collidepoint(mouse_pos):
-                    show_settings = False  # Volta para o menu principal
-                elif pygame.Rect(WIDTH // 2 - 175, 250, 50, 50).collidepoint(mouse_pos):  # Botão de diminuir volume
+                    show_settings = False  
+                elif pygame.Rect(WIDTH // 2 - 175, 250, 50, 50).collidepoint(mouse_pos):  
                     if volume_music > 0:
-                        volume_music -= 0.5
+                        volume_music -= 0.05
                     pygame.mixer.music.set_volume(volume_music)
-                elif pygame.Rect(WIDTH // 2 + 125, 250, 50, 50).collidepoint(mouse_pos):  # Botão de aumentar volume
-                    if volume_music < 100:
-                        volume_music += 0.5
+                elif pygame.Rect(WIDTH // 2 + 125, 250, 50, 50).collidepoint(mouse_pos):  
+                    if volume_music < 1:
+                        volume_music += 0.05
                     pygame.mixer.music.set_volume(volume_music)
-                elif pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80).collidepoint(mouse_pos):  # Botão de ativar/desativar efeitos sonoros
+                elif pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80).collidepoint(mouse_pos):  
                     sound_effects = not sound_effects
-            else:  # Se estamos no menu principal
+            else:  
                 for button in BUTTONS:
                     if button["rect"].collidepoint(mouse_pos):
                         if button["text"] == "SAIR":
@@ -217,11 +226,12 @@ while True:
                         elif button["text"] == "JOGAR":
                             print("Iniciar o Jogo...")
                         elif button["text"] == "RANKING":
-                            webbrowser.open("http://localhost")  # Abre a página localhost
+                            webbrowser.open("http://localhost")
                         elif button["text"] == "DEFINIÇÕES":
-                            show_settings = True  # Exibe o menu de definições
+                            show_settings = True  
                         elif button["text"] == "CRÉDITOS":
-                            show_credits = True  # Exibe o menu de créditos
+                            show_credits = True  
+
 
     clock.tick(60)
 
