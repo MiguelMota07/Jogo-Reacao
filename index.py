@@ -1,13 +1,13 @@
 from src import layoutIMSI
 import sys
-from testes import reaction
-from testes import teste_mao as teste
+from src import reaction_sound
+from src import reaction_colors
 
 def iniciar(a):
     if a == 1:
-        reaction.main()
+        reaction_sound.main()
     elif a == 2:
-        teste.main()
+        reaction_colors.main()
         layoutIMSI.main()
     else:
         sys.exit()
