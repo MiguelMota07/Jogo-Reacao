@@ -131,7 +131,9 @@ def pygame_loop(frame_queue, hand_position_queue):
 
     pygame.quit()
 
-if __name__ == "__main__":
+
+
+def main():
     pygame.init()
     info = pygame.display.Info()
     width, height = info.current_w, info.current_h
@@ -148,3 +150,6 @@ if __name__ == "__main__":
     
     pygame_thread.join()
     camera_process.terminate()
+    
+if __name__ == "__main__":
+    main()
