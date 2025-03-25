@@ -1,5 +1,0 @@
-npx create-react-app handpose 
-
-npm start
-
-npm install @tensorflow/tfjs @tensorflow-models/handpose react-webcam

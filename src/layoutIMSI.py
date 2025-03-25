@@ -8,7 +8,7 @@ def main ():
 
     pygame.init()
     pygame.mixer.init()
-    pygame.mixer.music.load('musica.mp3')
+    pygame.mixer.music.load('../assets/musics/musica.mp3')
     pygame.mixer.music.set_volume(0.15)
     pygame.mixer.music.play(-1)
 
@@ -32,7 +32,7 @@ def main ():
     TITLE_FONT = pygame.font.SysFont('arial', 72, bold=True)
     SUB_FONT = pygame.font.SysFont('arial', 32, bold=True)
 
-    click_sound = pygame.mixer.Sound("Click.mp3")
+    click_sound = pygame.mixer.Sound("../assets/musics/Click.mp3")
     click_sound.set_volume(0.15)  # Set volume on the specific sound object
 
 
