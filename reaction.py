@@ -90,16 +90,20 @@ def pygame_loop(frame_queue, hand_position_queue):
         # Check hand positions
         if not hand_position_queue.empty():
             hand_landmarks_list = hand_position_queue.get()
-            
+            hover = []
             for landmarks in hand_landmarks_list:
+                x1, y1 = landmarks[8]  # Index finger tip
+                x1 = int((1.0 - x1) * screen_width)
+                y1 = int(y1 * screen_height)
 
-                x, y = landmarks[8]  # Index finger tip
-                screen_x = int((1.0 - x) * screen_width)
-                screen_y = int(y * screen_height)
+                # x2, y2 = landmarks[]
+                # x2 = int((1.0 - x) * screen_width)
+                # y2 = int(y * screen_height)
                 for square in squares:
-                    if square['draw'].collidepoint(screen_x, screen_y):
+                    if square['draw'].collidepoint(x1, y1) and square['name'] not in hover:
+                        hover.append(square['name'])
                         square["color"] = default_hover_square_color
-                    else:
+                    elif square['name'] not in hover:
                         square["color"] = default_square_color
 
             
