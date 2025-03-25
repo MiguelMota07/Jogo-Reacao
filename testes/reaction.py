@@ -84,8 +84,6 @@ def pygame_loop(frame_queue, hand_position_queue):
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 running = False
                 break
-
-        #! Reset square colors
         
         # Check hand positions
         if not hand_position_queue.empty():
