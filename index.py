@@ -6,14 +6,16 @@ from testes import teste_mao as teste
 def iniciar(a):
     if a == 1:
         reaction.main()
-        layoutIMSI.main()
-    elif a ==2:
+    elif a == 2:
         teste.main()
         layoutIMSI.main()
+    else:
+        sys.exit()
 
 
 
 if __name__ == "__main__":
-    algumaCoisa = layoutIMSI.main()
-    iniciar(algumaCoisa)
-    
+    running = True
+    while running:
+        algumaCoisa=layoutIMSI.main()
+        iniciar(algumaCoisa)
