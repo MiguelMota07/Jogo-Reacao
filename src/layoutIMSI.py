@@ -26,6 +26,24 @@ def main ():
             posicao += 1
         return top_reacoes
 
+    def buscar_top_movimento():
+        conexao = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="expocic"
+        )
+        cursor = conexao.cursor()
+        cursor.execute("SELECT pontos, nome FROM movimento ORDER BY pontos DESC LIMIT 3")
+        resultados = cursor.fetchall()
+        conexao.close()
+
+        top_reacoes = []
+        posicao = 1
+        for nome, tempo in resultados:
+            top_reacoes.append(f"{posicao}. {tempo} - {nome}")
+            posicao += 1
+        return top_reacoes
 
 
     pygame.init()
@@ -68,7 +86,7 @@ def main ():
     ]
 
     top_reaction = buscar_top_reacoes()
-    top_movement = ["1. Carlos - 8752 pontos", "2. Ana - 6241 pontos", "3. Rui - 6211 pontos"]
+    top_movement = buscar_top_movimento()
 
     clock = pygame.time.Clock()
 
@@ -202,8 +220,6 @@ def main ():
         draw_button(back_button, mouse_pos)
 
         pygame.display.flip()
-
-
 
     # Exemplo de loop principal
     while True:

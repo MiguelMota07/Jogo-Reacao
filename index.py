@@ -13,8 +13,6 @@ def iniciar(a):
     else:
         sys.exit()
 
-
-
 if __name__ == "__main__":
     running = True
     while running:
