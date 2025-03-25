@@ -5,9 +5,11 @@ import teste_mao as teste
 
 def iniciar(a):
     if a == 1:
-       reaction.main() 
+       reaction.main()
+       layoutIMSI.main()
     elif a ==2:
         teste.main()
+        layoutIMSI.main()
 
 
 
