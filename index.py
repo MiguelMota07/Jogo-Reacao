@@ -2,6 +2,7 @@ from src import layoutIMSI
 import sys
 from testes import reaction
 from testes import teste_mao as teste
+import bd
 
 def iniciar(a):
     if a == 1:

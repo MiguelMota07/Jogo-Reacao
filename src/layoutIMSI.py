@@ -5,6 +5,28 @@ def main ():
     import random
     import os
     import subprocess
+    import mysql.connector
+
+    def buscar_top_reacoes():
+        conexao = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="expocic"
+        )
+        cursor = conexao.cursor()
+        cursor.execute("SELECT nome, tempo FROM reacoes ORDER BY tempo ASC LIMIT 3")
+        resultados = cursor.fetchall()
+        conexao.close()
+
+        top_reacoes = []
+        posicao = 1
+        for nome, tempo in resultados:
+            top_reacoes.append(f"{posicao}. {nome} - {tempo}s")
+            posicao += 1
+        return top_reacoes
+
+
 
     pygame.init()
     pygame.mixer.init()
@@ -34,7 +56,7 @@ def main ():
 
     click_sound = pygame.mixer.Sound("assets/musics/Click.mp3")
     click_sound.set_volume(0.15)  # Set volume on the specific sound object
-
+    
 
     # Botões e Textos
     BUTTONS = [
@@ -45,7 +67,7 @@ def main ():
         {"text": "SAIR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": RED, "hover": HOVER_RED},
     ]
 
-    top_reaction = ["1. João - 10s", "2. Maria - 12s", "3. Pedro - 14s"]
+    top_reaction = buscar_top_reacoes()
     top_movement = ["1. Carlos - 8752 pontos", "2. Ana - 6241 pontos", "3. Rui - 6211 pontos"]
 
     clock = pygame.time.Clock()
