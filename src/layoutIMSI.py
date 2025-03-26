@@ -1,51 +1,130 @@
+import pygame
+import sys
+import random
+import os
+import subprocess
+import db
+
+def draw_button(button, mouse_pos):
+    color = button["hover"] if button["rect"].collidepoint(mouse_pos) else button["color"]
+    pygame.draw.rect(SCREEN, color, button["rect"], border_radius=12)
+    text_surface = FONT.render(button["text"], True, WHITE)
+    SCREEN.blit(text_surface, (button["rect"].centerx - text_surface.get_width() // 2, button["rect"].centery - text_surface.get_height() // 2))
+
+def draw_menu():
+    SCREEN.fill(DARK_BG)
+    
+    # Título com sombra
+    title = TITLE_FONT.render("DESAFIA-TE!", True, WHITE)
+    shadow = TITLE_FONT.render("DESAFIA-TE!", True, GRAY)
+    SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
+    SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+    
+    # Top 3 - Reação
+    SCREEN.blit(SUB_FONT.render("Top Reação", True, WHITE), (50, 150))
+    for i, player in enumerate(top_reaction):
+        player_text = FONT.render(player, True, LIGHT_GRAY)
+        SCREEN.blit(player_text, (50, 200 + i * 40))
+    
+    # Top 3 - Movimento
+    SCREEN.blit(SUB_FONT.render("Top Movimento", True, WHITE), (WIDTH - 320, 150))
+    for i, player in enumerate(top_movement):
+        player_text = FONT.render(player, True, LIGHT_GRAY)
+        SCREEN.blit(player_text, (WIDTH - 320, 200 + i * 40))
+    
+    # Desenhar botões
+    mouse_pos = pygame.mouse.get_pos()
+    for button in BUTTONS:
+        draw_button(button, mouse_pos)
+
+    pygame.display.flip()
+
+def draw_credits_menu():
+    SCREEN.fill(DARK_BG)
+    
+    # Título com sombra
+    title = TITLE_FONT.render("CRÉDITOS", True, WHITE)
+    shadow = TITLE_FONT.render("CRÉDITOS", True, GRAY)
+    SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
+    SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+
+    # Centralizando os textos
+    developers_text = SUB_FONT.render("Desenvolvedores:", True, WHITE)
+    musicas_text = SUB_FONT.render("Músicas utilizadas:", True, WHITE)
+
+    # Posicionamento centralizado
+    developers_pos = (WIDTH // 2 - developers_text.get_width() // 2, 200)
+    musicas_pos = (WIDTH // 2 - musicas_text.get_width() // 2, 400)
+
+    # Desenhando os títulos centralizados
+    SCREEN.blit(developers_text, developers_pos)
+    SCREEN.blit(musicas_text, musicas_pos)
+    
+    # Desenvolvedores
+    developers = ["André Nicolau", "Miguel Mota"]
+    for i, dev in enumerate(developers):
+        dev_text = FONT.render(dev, True, LIGHT_GRAY)
+        SCREEN.blit(dev_text, (WIDTH // 2 - dev_text.get_width() // 2, 250 + i * 40))  # Ajustado a posição vertical
+    
+    # Músicas utilizadas
+    musicas = ["Age of War", "Puto Roger", "123"]
+    for i, musica in enumerate(musicas):
+        musica_text = FONT.render(musica, True, LIGHT_GRAY)
+        SCREEN.blit(musica_text, (WIDTH // 2 - musica_text.get_width() // 2, 450 + i * 40))  # Ajustado a posição vertical
+    
+    # Botão Voltar
+    draw_button(back_button, pygame.mouse.get_pos())
+    
+    pygame.display.flip()
+
+def draw_settings_menu():
+    SCREEN.fill(DARK_BG)
+    
+    # Título com sombra
+    title = TITLE_FONT.render("DEFINIÇÕES", True, WHITE)
+    shadow = TITLE_FONT.render("DEFINIÇÕES", True, GRAY)
+    SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
+    SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+    
+    # Ajuste de volume de música
+    volume_text = FONT.render(f"Volume Música: {int(volume_music * 100)}%", True, WHITE)
+    volume_text_pos = (WIDTH // 2 - volume_text.get_width() // 2, 250)
+    SCREEN.blit(volume_text, volume_text_pos)
+
+    mouse_pos = pygame.mouse.get_pos()
+
+    # Definir os rects dos botões + e -
+    minus_rect = pygame.Rect(WIDTH // 2 - 175, 250, 50, 50)
+    plus_rect = pygame.Rect(WIDTH // 2 + 125, 250, 50, 50)
+
+    # Verificar hover e definir cor
+    minus_color = HOVER_BLUE if minus_rect.collidepoint(mouse_pos) else BLUE
+    plus_color = HOVER_BLUE if plus_rect.collidepoint(mouse_pos) else BLUE
+
+    # Desenhar os botões
+    pygame.draw.rect(SCREEN, minus_color, minus_rect, border_radius=12)
+    pygame.draw.rect(SCREEN, plus_color, plus_rect, border_radius=12)
+
+    # Desenhar os símbolos + e -
+    plus_button = FONT.render("+", True, WHITE)
+    minus_button = FONT.render("-", True, WHITE)
+    SCREEN.blit(minus_button, (minus_rect.centerx - minus_button.get_width() // 2, minus_rect.centery - minus_button.get_height() // 2))
+    SCREEN.blit(plus_button, (plus_rect.centerx - plus_button.get_width() // 2, plus_rect.centery - plus_button.get_height() // 2))
+
+    # Efeitos sonoros
+    sound_text = FONT.render(f"Efeitos Sonoros: {'Ativos' if sound_effects else 'Desativados'}", True, WHITE)
+    SCREEN.blit(sound_text, (WIDTH // 2 - sound_text.get_width() // 2, 350))
+
+    # Botão para ativar/desativar efeitos sonoros
+    sound_button_color = BLUE if sound_effects else RED
+    draw_button({"text": "Ativar/Desativar Efeitos Sonoros", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": sound_button_color, "hover": HOVER_BLUE}, mouse_pos)
+
+    # Botão Voltar
+    draw_button(back_button, mouse_pos)
+
+    pygame.display.flip()
+
 def main ():
-    import pygame
-    import sys
-    import webbrowser  # Adicionado para abrir páginas web
-    import random
-    import os
-    import subprocess
-    import mysql.connector
-
-    def buscar_top_reacoes():
-        conexao = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="expocic"
-        )
-        cursor = conexao.cursor()
-        cursor.execute("SELECT nome, tempo FROM reacoes ORDER BY tempo ASC LIMIT 3")
-        resultados = cursor.fetchall()
-        conexao.close()
-
-        top_reacoes = []
-        posicao = 1
-        for nome, tempo in resultados:
-            top_reacoes.append(f"{posicao}. {nome} - {tempo}s")
-            posicao += 1
-        return top_reacoes
-
-    def buscar_top_movimento():
-        conexao = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="expocic"
-        )
-        cursor = conexao.cursor()
-        cursor.execute("SELECT pontos, nome FROM movimento ORDER BY pontos DESC LIMIT 3")
-        resultados = cursor.fetchall()
-        conexao.close()
-
-        top_reacoes = []
-        posicao = 1
-        for nome, tempo in resultados:
-            top_reacoes.append(f"{posicao}. {tempo} - {nome}")
-            posicao += 1
-        return top_reacoes
-
-
     pygame.init()
     pygame.mixer.init()
     pygame.mixer.music.load('assets/musics/musica.mp3')
@@ -85,8 +164,8 @@ def main ():
         {"text": "SAIR", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": RED, "hover": HOVER_RED},
     ]
 
-    top_reaction = buscar_top_reacoes()
-    top_movement = buscar_top_movimento()
+    top_reaction = db.buscar_top_reacoes()
+    top_movement = ["1. Carlos - 8752 pontos", "2. Ana - 6241 pontos", "3. Rui - 6211 pontos"]
 
     clock = pygame.time.Clock()
 
@@ -100,127 +179,7 @@ def main ():
     # Variáveis de configuração
     volume_music = 0.15
     sound_effects = True
-
-    def draw_button(button, mouse_pos):
-        color = button["hover"] if button["rect"].collidepoint(mouse_pos) else button["color"]
-        pygame.draw.rect(SCREEN, color, button["rect"], border_radius=12)
-        text_surface = FONT.render(button["text"], True, WHITE)
-        SCREEN.blit(text_surface, (button["rect"].centerx - text_surface.get_width() // 2,
-                                button["rect"].centery - text_surface.get_height() // 2))
-
-    def draw_menu():
-        SCREEN.fill(DARK_BG)
-        
-        # Título com sombra
-        title = TITLE_FONT.render("DESAFIA-TE!", True, WHITE)
-        shadow = TITLE_FONT.render("DESAFIA-TE!", True, GRAY)
-        SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
-        SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
-        
-        # Top 3 - Reação
-        SCREEN.blit(SUB_FONT.render("Top Reação", True, WHITE), (50, 150))
-        for i, player in enumerate(top_reaction):
-            player_text = FONT.render(player, True, LIGHT_GRAY)
-            SCREEN.blit(player_text, (50, 200 + i * 40))
-        
-        # Top 3 - Movimento
-        SCREEN.blit(SUB_FONT.render("Top Movimento", True, WHITE), (WIDTH - 320, 150))
-        for i, player in enumerate(top_movement):
-            player_text = FONT.render(player, True, LIGHT_GRAY)
-            SCREEN.blit(player_text, (WIDTH - 320, 200 + i * 40))
-        
-        # Desenhar botões
-        mouse_pos = pygame.mouse.get_pos()
-        for button in BUTTONS:
-            draw_button(button, mouse_pos)
-
-        pygame.display.flip()
-
-    def draw_credits_menu():
-        SCREEN.fill(DARK_BG)
-        
-        # Título com sombra
-        title = TITLE_FONT.render("CRÉDITOS", True, WHITE)
-        shadow = TITLE_FONT.render("CRÉDITOS", True, GRAY)
-        SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
-        SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
-
-        # Centralizando os textos
-        developers_text = SUB_FONT.render("Desenvolvedores:", True, WHITE)
-        musicas_text = SUB_FONT.render("Músicas utilizadas:", True, WHITE)
-
-        # Posicionamento centralizado
-        developers_pos = (WIDTH // 2 - developers_text.get_width() // 2, 200)
-        musicas_pos = (WIDTH // 2 - musicas_text.get_width() // 2, 400)
-
-        # Desenhando os títulos centralizados
-        SCREEN.blit(developers_text, developers_pos)
-        SCREEN.blit(musicas_text, musicas_pos)
-        
-        # Desenvolvedores
-        developers = ["André Nicolau", "Miguel Mota"]
-        for i, dev in enumerate(developers):
-            dev_text = FONT.render(dev, True, LIGHT_GRAY)
-            SCREEN.blit(dev_text, (WIDTH // 2 - dev_text.get_width() // 2, 250 + i * 40))  # Ajustado a posição vertical
-        
-        # Músicas utilizadas
-        musicas = ["Age of War", "Puto Roger", "123"]
-        for i, musica in enumerate(musicas):
-            musica_text = FONT.render(musica, True, LIGHT_GRAY)
-            SCREEN.blit(musica_text, (WIDTH // 2 - musica_text.get_width() // 2, 450 + i * 40))  # Ajustado a posição vertical
-        
-        # Botão Voltar
-        draw_button(back_button, pygame.mouse.get_pos())
-        
-        pygame.display.flip()
-
-    def draw_settings_menu():
-        SCREEN.fill(DARK_BG)
-        
-        # Título com sombra
-        title = TITLE_FONT.render("DEFINIÇÕES", True, WHITE)
-        shadow = TITLE_FONT.render("DEFINIÇÕES", True, GRAY)
-        SCREEN.blit(shadow, (WIDTH // 2 - title.get_width() // 2 + 4, 54))
-        SCREEN.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
-        
-        # Ajuste de volume de música
-        volume_text = FONT.render(f"Volume Música: {int(volume_music * 100)}%", True, WHITE)
-        volume_text_pos = (WIDTH // 2 - volume_text.get_width() // 2, 250)
-        SCREEN.blit(volume_text, volume_text_pos)
-
-        mouse_pos = pygame.mouse.get_pos()
-
-        # Definir os rects dos botões + e -
-        minus_rect = pygame.Rect(WIDTH // 2 - 175, 250, 50, 50)
-        plus_rect = pygame.Rect(WIDTH // 2 + 125, 250, 50, 50)
-
-        # Verificar hover e definir cor
-        minus_color = HOVER_BLUE if minus_rect.collidepoint(mouse_pos) else BLUE
-        plus_color = HOVER_BLUE if plus_rect.collidepoint(mouse_pos) else BLUE
-
-        # Desenhar os botões
-        pygame.draw.rect(SCREEN, minus_color, minus_rect, border_radius=12)
-        pygame.draw.rect(SCREEN, plus_color, plus_rect, border_radius=12)
-
-        # Desenhar os símbolos + e -
-        plus_button = FONT.render("+", True, WHITE)
-        minus_button = FONT.render("-", True, WHITE)
-        SCREEN.blit(minus_button, (minus_rect.centerx - minus_button.get_width() // 2, minus_rect.centery - minus_button.get_height() // 2))
-        SCREEN.blit(plus_button, (plus_rect.centerx - plus_button.get_width() // 2, plus_rect.centery - plus_button.get_height() // 2))
-
-        # Efeitos sonoros
-        sound_text = FONT.render(f"Efeitos Sonoros: {'Ativos' if sound_effects else 'Desativados'}", True, WHITE)
-        SCREEN.blit(sound_text, (WIDTH // 2 - sound_text.get_width() // 2, 350))
-
-        # Botão para ativar/desativar efeitos sonoros
-        sound_button_color = BLUE if sound_effects else RED
-        draw_button({"text": "Ativar/Desativar Efeitos Sonoros", "rect": pygame.Rect(WIDTH // 2 - 170, HEIGHT // 2 + 300, 340, 80), "color": sound_button_color, "hover": HOVER_BLUE}, mouse_pos)
-
-        # Botão Voltar
-        draw_button(back_button, mouse_pos)
-
-        pygame.display.flip()
-
+    
     # Exemplo de loop principal
     while True:
         if show_credits:
@@ -278,3 +237,6 @@ def main ():
 
     pygame.quit()
     sys.exit()
+
+
+main()

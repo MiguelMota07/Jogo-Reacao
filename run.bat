@@ -1,1 +1,1 @@
-python public/teste_mao.py
+python index.py
