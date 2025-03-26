@@ -5,6 +5,16 @@ import numpy as np
 import multiprocessing as mp_proc
 import threading
 import time
+import random
+
+pygame.init()
+pygame.mixer.init()
+left_sound = pygame.mixer.Sound("assets/musics/Left.mp3")
+right_sound = pygame.mixer.Sound("assets/musics/Right.mp3")
+
+def play_random_sound():
+    sound = random.choice([left_sound, right_sound])
+    sound.play()
 
 def process_camera(frame_queue, hand_position_queue, width, height):
     camera = cv2.VideoCapture(0)
@@ -143,6 +153,8 @@ def pygame_loop(frame_queue, hand_position_queue):
             if countdown_remaining == 0:
                 countdown_active = False
                 start_time = time.time()  # Start the main timer once countdown finishes
+                play_random_sound()  # Toca o som aleatório aqui
+
 
         pygame.display.flip()
         clock.tick(120)  # High FPS if possible

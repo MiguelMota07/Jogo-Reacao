@@ -3,9 +3,9 @@ import mysql.connector
 def buscar_top_reacoes():
 	conexao = mysql.connector.connect(
 		host="localhost",
-		user="mota",
-		password="root",
-		database="imsi"
+		user="root",
+		password="",
+		database="expocic"
 	)
 	cursor = conexao.cursor()
 	cursor.execute("SELECT nome, tempo FROM reacoes ORDER BY tempo ASC LIMIT 3")
