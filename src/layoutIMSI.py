@@ -3,7 +3,8 @@ import sys
 import random
 import os
 import subprocess
-import db
+from src import db
+
 
 def draw_button(button, mouse_pos):
     color = button["hover"] if button["rect"].collidepoint(mouse_pos) else button["color"]

@@ -2,6 +2,7 @@ from src import layoutIMSI
 import sys
 from src import reaction_sound
 from src import reaction_colors
+from src import db
 
 def iniciar(a):
     if a == 1:
