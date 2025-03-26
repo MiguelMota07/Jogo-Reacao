@@ -9,8 +9,7 @@ def draw_button(button, mouse_pos):
     color = button["hover"] if button["rect"].collidepoint(mouse_pos) else button["color"]
     pygame.draw.rect(SCREEN, color, button["rect"], border_radius=12)
     text_surface = FONT.render(button["text"], True, WHITE)
-    SCREEN.blit(text_surface, (button["rect"].centerx - text_surface.get_width() // 2,
-                            button["rect"].centery - text_surface.get_height() // 2))
+    SCREEN.blit(text_surface, (button["rect"].centerx - text_surface.get_width() // 2, button["rect"].centery - text_surface.get_height() // 2))
 
 def draw_menu():
     SCREEN.fill(DARK_BG)
