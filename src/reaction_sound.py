@@ -13,8 +13,10 @@ left_sound = pygame.mixer.Sound("assets/musics/Left.mp3")
 right_sound = pygame.mixer.Sound("assets/musics/Right.mp3")
 
 def play_random_sound():
-    sound = random.choice([left_sound, right_sound])
-    sound.play()
+    sounds = [{"sound" : left_sound,"squareName": "Left"},{"sound":right_sound, "squareName": "Right"}]
+    sound = random.choice(sounds)
+    sound["sound"].play()
+    return sound['squareName']
 
 def process_camera(frame_queue, hand_position_queue, width, height):
     camera = cv2.VideoCapture(0)
@@ -87,6 +89,12 @@ def pygame_loop(frame_queue, hand_position_queue):
     elapsed_time = 0
 
     has_userRemovedHands = False
+    is_gameRunning = False
+
+    handToRemove = ""
+    tryNumber = 0
+
+    has_won = has_lose = False
 
     running = True
     while running:
@@ -117,12 +125,30 @@ def pygame_loop(frame_queue, hand_position_queue):
 
             # Check if both hands are hovering over the squares
             if all(square["color"] == default_hover_square_color for square in squares) and not countdown_active:
-                countdown_active = True
-                has_userRemovedHands = True
-                countdown_start_time = time.time()
-            elif all(square["color"] == default_square_color for square in squares) and countdown_active:
-                has_userRemovedHands = True
-                countdown_active = False
+                if not is_gameRunning:
+                    countdown_active = True
+                    countdown_start_time = time.time()
+                    has_lose = has_won = False
+                has_userRemovedHands = False
+            else:
+                if handToRemove is not "":  # Check if handToRemove is not empty
+                    removed_square = next((square for square in squares if square["name"] == handToRemove), None)
+                    other_squares = [square for square in squares if square["name"] != handToRemove]
+                    if removed_square["color"] == default_square_color and all(square["color"] == default_hover_square_color for square in other_squares):
+                        start_time = None  # stops the running timer
+                        handToRemove = ""
+                        tryNumber += 1
+                        is_gameRunning = False
+                        has_won = True
+                    else:
+                        start_time = None
+                        handToRemove = ""
+                        is_gameRunning = False
+                        has_lose = True
+                elif all(square["color"] == default_square_color for square in squares) and countdown_active:  # checks if user removed hands from squares
+                    has_userRemovedHands = True
+                    countdown_active = False
+                    countdown_active = False
 
         # Draw everything
         if not frame_queue.empty():
@@ -159,6 +185,14 @@ def pygame_loop(frame_queue, hand_position_queue):
         instruction = font.render(instruction_text, True, white)
         screen.blit(instruction, (screen_width // 2 - instruction.get_width() // 2, 20))
 
+        # Draw Win / Lose message
+        if has_won:
+            win_text = font.render("Você ganhou!", True, green)
+            screen.blit(win_text, (screen_width // 2 - win_text.get_width() // 2, screen_height // 2))
+        elif has_lose:
+            lose_text = font.render("Você perdeu! Tente novamente!", True, red)
+            screen.blit(lose_text, (screen_width // 2 - lose_text.get_width() // 2, screen_height // 2))
+
         # Countdown logic
         if countdown_active:
             countdown_remaining = max(0, countdown - int(time.time() - countdown_start_time))
@@ -166,7 +200,8 @@ def pygame_loop(frame_queue, hand_position_queue):
             if countdown_remaining == 0:
                 countdown_active = False
                 start_time = time.time()  # Start the main timer once countdown finishes
-                play_random_sound()  # Toca o som aleatório aqui
+                handToRemove = play_random_sound()  # Toca o som aleatório aqui e devolve qual mão a remover do quadrado
+                is_gameRunning = True
             else:
                 countdown_text = timer_font.render(f"{countdown_remaining}", True, white)
                 countdown_rect = countdown_text.get_rect(center=(screen_width // 2, screen_height // 2))
