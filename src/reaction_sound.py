@@ -74,12 +74,16 @@ def pygame_loop(frame_queue, hand_position_queue):
     countdown_active = False
     countdown = 5  # Start at 5 seconds
 
+    elapsed_time = 0
+
+    has_userRemovedHands = False
+
     running = True
     while running:
+
+		# Timer logic
         if start_time is not None:
             elapsed_time = time.time() - start_time  # Timer counting
-        else:
-            elapsed_time = 0  # If timer hasn't started yet
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -101,10 +105,14 @@ def pygame_loop(frame_queue, hand_position_queue):
                     elif square['name'] not in hover:
                         square["color"] = default_square_color
 
-            # Check if both squares are green
-            if all(square["color"] == green for square in squares) and not countdown_active:
+            # Check if both hands are hovering over the squares
+            if all(square["color"] == default_hover_square_color for square in squares) and not countdown_active:
                 countdown_active = True
+                has_userRemovedHands = True
                 countdown_start_time = time.time()
+            elif all(square["color"] == default_square_color for square in squares) and countdown_active:
+                has_userRemovedHands = True
+                countdown_active = False
 
         # Draw everything
         if not frame_queue.empty():
@@ -124,25 +132,35 @@ def pygame_loop(frame_queue, hand_position_queue):
         fps_text = font.render(f"FPS: {fps}", True, (0, 255, 0))
         screen.blit(fps_text, (10, 10))
 
-        # Draw Timer (CENTER)
+		#Game mechanics
+
+        # Draw starting Timer (CENTER)
         timer_text = timer_font.render(f"{elapsed_time:.1f} s", True, white)
         timer_rect = timer_text.get_rect(bottomright=(screen_width - 20, screen_height - 20))
         screen.blit(timer_text, timer_rect)
 
-        # Display the instruction text
-        instruction_text = font.render("Coloque as mãos nos quadrados", True, white)
-        screen.blit(instruction_text, (screen_width // 2 - instruction_text.get_width() // 2, 20))
+        instruction_text = "Coloque as mãos sobre os quadrados para começar!"
+        # Instruction text
+        if countdown_active:
+            instruction_text = "De onde ouvir o som retire a mão!"
+        elif has_userRemovedHands:
+            instruction_text = "Não retire as mãos dos quadrados!"
+
+        instruction = font.render(instruction_text, True, white)
+        screen.blit(instruction, (screen_width // 2 - instruction.get_width() // 2, 20))
 
         # Countdown logic
         if countdown_active:
             countdown_remaining = max(0, countdown - int(time.time() - countdown_start_time))
-            countdown_text = timer_font.render(f"{countdown_remaining}", True, white)
-            countdown_rect = countdown_text.get_rect(center=(screen_width // 2, screen_height // 2))
-            screen.blit(countdown_text, countdown_rect)
 
             if countdown_remaining == 0:
                 countdown_active = False
                 start_time = time.time()  # Start the main timer once countdown finishes
+            else:
+                countdown_text = timer_font.render(f"{countdown_remaining}", True, white)
+                countdown_rect = countdown_text.get_rect(center=(screen_width // 2, screen_height // 2))
+                screen.blit(countdown_text, countdown_rect)
+            
 
         pygame.display.flip()
         clock.tick(120)  # High FPS if possible
