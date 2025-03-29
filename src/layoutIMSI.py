@@ -46,7 +46,8 @@ def main ():
     ]
 
     top_reaction = db.buscar_top_reacoes()
-    top_movement = ["1. Carlos - 8752 pontos", "2. Ana - 6241 pontos", "3. Rui - 6211 pontos"]
+    top_movement = db.buscar_top_movimentos()
+    
 
     clock = pygame.time.Clock()
 

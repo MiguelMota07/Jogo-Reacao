@@ -18,3 +18,26 @@ def buscar_top_reacoes():
 		top_reacoes.append(f"{posicao}. {nome} - {tempo}s")
 		posicao += 1
 	return top_reacoes
+
+def buscar_top_movimentos():
+    try:
+        conexao = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="expocic"
+        )
+        cursor = conexao.cursor()
+        cursor.execute("SELECT nome, pontos FROM movimento ORDER BY pontos DESC LIMIT 3")
+        resultados = cursor.fetchall()
+        conexao.close()
+
+        top_movimentos = []
+        posicao = 1
+        for nome, pontos in resultados:
+            top_movimentos.append(f"{posicao}. {nome} - {pontos}")
+            posicao += 1
+        return top_movimentos
+    except Exception as e:
+        print("Erro ao buscar top movimentos:", e)
+        return []

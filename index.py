@@ -7,6 +7,7 @@ from src import db
 def iniciar(a):
     if a == 1:
         reaction_sound.main()
+        layoutIMSI.main()
     elif a == 2:
         reaction_colors.main()
         layoutIMSI.main()
