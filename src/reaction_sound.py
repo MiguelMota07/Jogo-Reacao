@@ -7,6 +7,7 @@ import threading
 import time
 import random
 import subprocess  # Para chamar o resSound.py
+import sys
 
 pygame.init()
 pygame.mixer.init()
@@ -19,7 +20,7 @@ def play_random_sound():
     sound["sound"].play()
     return sound['squareName']
 
-def process_camera(frame_queue, hand_position_queue, width, height):
+def process_camera(frame_queue, hand_position_queue, width, height, stop_event):
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -27,7 +28,7 @@ def process_camera(frame_queue, hand_position_queue, width, height):
     hands = mp_hands.Hands()
     mp_draw = mp.solutions.drawing_utils
 
-    while True:
+    while not stop_event.is_set():
         success, frame = camera.read()
         if not success:
             continue
@@ -43,7 +44,7 @@ def process_camera(frame_queue, hand_position_queue, width, height):
                 for landmark in hand_landmarks.landmark:
                     h, w, _ = frame.shape
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
-                    landmarks.append((landmark.x, landmark.y))  # Normalizado
+                    landmarks.append((landmark.x, landmark.y))
                 hand_landmarks_list.append(landmarks)
 
         if hand_position_queue.full():
@@ -54,13 +55,16 @@ def process_camera(frame_queue, hand_position_queue, width, height):
             frame_queue.get()
         frame_queue.put(frame)
 
-def pygame_loop(frame_queue, hand_position_queue):
+    camera.release()  # Libera a câmera antes de encerrar o processo
+
+
+def pygame_loop(frame_queue, hand_position_queue, stop_event):
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = screen.get_size()
     clock = pygame.time.Clock()
-    font = pygame.font.Font(None, 36)  # Fonte para labels
-    timer_font = pygame.font.Font(None, 100)  # Fonte maior para timer
+    font = pygame.font.Font(None, 36)
+    timer_font = pygame.font.Font(None, 100)
 
     # Variáveis para controle do timer
     start_time = None  # Timer não iniciado ainda
@@ -150,10 +154,12 @@ def pygame_loop(frame_queue, hand_position_queue):
                     is_gameRunning = False
                     round_times.append(round_time)
                     # Se atingir o número máximo de rodadas, calcula a média e chama resSound.py
+                    # Dentro da função pygame_loop, no bloco onde tryNumber >= max_rounds:
                     if tryNumber >= max_rounds:
                         avg_time = sum(round_times) / max_rounds
+                        pygame.quit()
                         subprocess.call(['python', 'src/resSound.py', str(avg_time)])
-                        running = False
+                        running = False  # Remove sys.exit() e define running como False para sair do loop
                 elif all(square["color"] == default_square_color for square in squares) and countdown_active:  # Checa se o usuário retirou as mãos
                     has_userRemovedHands = True
                     countdown_active = False
@@ -204,9 +210,11 @@ def pygame_loop(frame_queue, hand_position_queue):
         screen.blit(rounds_label, (10, 50))
         if tryNumber >= max_rounds:
             avg_time = sum(round_times) / max_rounds
-            avg_label = font.render(f"Média dos 5: {avg_time:.1f} s", True, white)
-            screen.blit(avg_label, (10, 90))
-
+            pygame.quit()
+            stop_event.set()
+            subprocess.call(['python', 'src/resSound.py', str(avg_time)])
+            running = False
+            
         # Lógica da contagem regressiva
         if countdown_active:
             countdown_remaining = max(0, countdown - int(time.time() - countdown_start_time))
@@ -234,15 +242,18 @@ def main():
 
     frame_queue = mp_proc.Queue(maxsize=1)
     hand_position_queue = mp_proc.Queue(maxsize=1)
+    stop_event = mp_proc.Event()
 
-    camera_process = mp_proc.Process(target=process_camera, args=(frame_queue, hand_position_queue, width, height))
+    camera_process = mp_proc.Process(target=process_camera, args=(frame_queue, hand_position_queue, width, height, stop_event))
     camera_process.start()
 
-    pygame_thread = threading.Thread(target=pygame_loop, args=(frame_queue, hand_position_queue))
+    pygame_thread = threading.Thread(target=pygame_loop, args=(frame_queue, hand_position_queue, stop_event))
     pygame_thread.start()
 
     pygame_thread.join()
-    camera_process.terminate()
+    stop_event.set()  # Sinaliza para o processo da câmera encerrar
+    camera_process.join()
+
 
 if __name__ == "__main__":
     main()

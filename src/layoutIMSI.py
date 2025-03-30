@@ -3,15 +3,39 @@ import sys
 import random
 import os
 import subprocess
-from src import db
+import db
+import subprocess
+import psutil  # Para gerenciar processos Python
+
+
+def disable_camera():
+    try:
+        if sys.platform.startswith("win"):
+            subprocess.call("wmic path Win32_PnPEntity where \"Caption like '%camera%'\" call disable", shell=True)
+        elif sys.platform.startswith("linux"):
+            subprocess.call("sudo modprobe -r uvcvideo", shell=True)
+        else:
+            print("Desativação automática de câmera não suportada neste sistema.")
+    except Exception as e:
+        print(f"Erro ao tentar desligar a câmera: {e}")
+
+def terminate_python_processes():
+    """Finaliza todos os processos Python em execução, exceto o processo atual."""
+    current_pid = os.getpid()  # Obtém o pid do processo atual (layoutIMSI.py)
+    for proc in psutil.process_iter(['pid', 'name']):
+        if 'python' in proc.info['name'].lower() and proc.info['pid'] != current_pid:
+            proc.terminate()
+            print(f"Finalizando o processo Python: {proc.info['pid']}")
 
 def main ():
+    disable_camera()
     pygame.init()
     pygame.mixer.init()
     pygame.mixer.music.load('assets/musics/musica.mp3')
     pygame.mixer.music.set_volume(0.15)
     pygame.mixer.music.play(-1)
-
+    disable_camera()
+    terminate_python_processes()
     # Configurações Gerais
     SCREEN = pygame.display.set_mode((0, 0))
     WIDTH, HEIGHT = SCREEN.get_width(), SCREEN.get_height()
@@ -226,11 +250,13 @@ def main ():
                                 pygame.quit()
                                 sys.exit()
                             elif button["text"] == "JOGAR REAÇÕES":
-                                print("Iniciar o Jogo Reações...")
-                                return 1
+                                pygame.quit()
+                                subprocess.call(["python", "src/reaction_sound.py"])
+                                sys.exit()
                             elif button["text"] == "JOGAR PONTUAÇÃO":
-                                print("Iniciar o Jogo Pontuação...")
-                                return 2
+                                pygame.quit()
+                                subprocess.call(["python", "src/reaction_colors.py"])
+                                sys.exit()
                             elif button["text"] == "DEFINIÇÕES":
                                 show_settings = True  
                             elif button["text"] == "CRÉDITOS":

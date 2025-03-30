@@ -5,14 +5,15 @@ import numpy as np
 import multiprocessing as mp_proc
 import threading
 import time
-import random  # Importa random para gerar novas posições
+import random
 import os
-import subprocess  # Para chamar o resSound.py
+import subprocess
+import sys
 
 # Tempo máximo antes do quadrado mudar sozinho (em segundos)
 SQUARE_LIFETIME = 1.0  
 
-def process_camera(frame_queue, hand_position_queue, width, height):
+def process_camera(frame_queue, hand_position_queue, width, height, terminate_event):
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -20,31 +21,35 @@ def process_camera(frame_queue, hand_position_queue, width, height):
     hands = mp_hands.Hands()
     mp_draw = mp.solutions.drawing_utils
 
-    while True:
-        success, frame = camera.read()
-        if not success:
-            continue
+    try:
+        while not terminate_event.is_set():
+            success, frame = camera.read()
+            if not success:
+                continue
 
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(image_rgb)
+            image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = hands.process(image_rgb)
 
-        hand_landmarks_list = []
-        
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                landmarks = []
-                for landmark in hand_landmarks.landmark:
-                    landmarks.append((landmark.x, landmark.y))  # Coordenadas normalizadas
-                hand_landmarks_list.append(landmarks)
-        
-        if hand_position_queue.full():
-            hand_position_queue.get()
-        hand_position_queue.put(hand_landmarks_list)
-        
-        if frame_queue.full():
-            frame_queue.get()
-        frame_queue.put(frame)
+            hand_landmarks_list = []
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                    landmarks = []
+                    for landmark in hand_landmarks.landmark:
+                        landmarks.append((landmark.x, landmark.y))
+                    hand_landmarks_list.append(landmarks)
+
+            if hand_position_queue.full():
+                hand_position_queue.get()
+            hand_position_queue.put(hand_landmarks_list)
+
+            if frame_queue.full():
+                frame_queue.get()
+            frame_queue.put(frame)
+    finally:
+        camera.release()
+        cv2.destroyAllWindows()
+
 
 def pygame_loop(frame_queue, hand_position_queue):
     pygame.init()
@@ -53,31 +58,27 @@ def pygame_loop(frame_queue, hand_position_queue):
     clock = pygame.time.Clock()
     font = pygame.font.Font(None, 36)
 
-    # Cores
     red = (255, 0, 0)
     green = (0, 255, 0)
 
-    # Configuração do quadrado
     default_square_size = 150
     default_square_color = red
     default_hover_square_color = green
 
-    # Criação do quadrado inicial
     squares = [{
         "name": "TopLeft",
         "x": random.randint(0, screen_width - default_square_size),
         "y": random.randint(0, screen_height - default_square_size),
         "size": default_square_size,
         "color": default_square_color,
-        "time": time.time()  # Registra o tempo de criação/movimento
+        "time": time.time()
     }]
     for square in squares:
         square['draw'] = pygame.Rect(square["x"], square["y"], square["size"], square["size"])
 
-    # Variáveis de pontuação, combo e temporizador
     score = 0
     combo = 0
-    game_duration = 59  # Duração total do jogo em segundos
+    game_duration = 59  
     start_time = time.time()
 
     running = True
@@ -86,22 +87,19 @@ def pygame_loop(frame_queue, hand_position_queue):
         elapsed = current_time - start_time
         remaining_time = game_duration - elapsed
 
-        # Se o tempo acabar, envia a pontuação para a página de resultado (resColors.py)
         if remaining_time <= 0:
-            # Chama o script resColors.py passando o score como argumento
-            subprocess.call(["python", "src/resColors.py", str(score)])
-            break
+            pygame.quit()
+            os.execl(sys.executable, sys.executable, "src/resColors.py", str(score))
+            sys.exit()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 running = False
                 break
 
-        # Verifica a posição da mão
         if not hand_position_queue.empty():
             hand_landmarks_list = hand_position_queue.get()
             for landmarks in hand_landmarks_list:
-                # Utiliza a ponta do dedo indicador
                 x1, y1 = landmarks[8]
                 x1 = int((1.0 - x1) * screen_width)
                 y1 = int(y1 * screen_height)
@@ -110,20 +108,16 @@ def pygame_loop(frame_queue, hand_position_queue):
                     if square['draw'].collidepoint(x1, y1):
                         if square["color"] != default_hover_square_color:
                             square["color"] = default_hover_square_color
-                            square["time"] = time.time()  # Reseta o tempo
-                            # Atualiza combo e pontuação: cada acerto soma pontos multiplicados pelo combo
+                            square["time"] = time.time()
                             combo += 1
-                            score += 1 * combo  # Valor base multiplicado pelo combo
-                            # Gera novas coordenadas aleatórias para o quadrado
+                            score += 1 * combo
                             square["x"] = random.randint(0, screen_width - square["size"])
                             square["y"] = random.randint(0, screen_height - square["size"])
                             square['draw'] = pygame.Rect(square["x"], square["y"], square["size"], square["size"])
                             square["color"] = default_square_color
 
-        # Verifica se o quadrado passou do tempo limite sem ser tocado
         for square in squares:
             if current_time - square["time"] >= SQUARE_LIFETIME:
-                # O quadrado não foi acertado: reinicia posição e reseta combo
                 combo = 0
                 square["x"] = random.randint(0, screen_width - square["size"])
                 square["y"] = random.randint(0, screen_height - square["size"])
@@ -139,11 +133,9 @@ def pygame_loop(frame_queue, hand_position_queue):
             frame = pygame.transform.scale(frame, (screen_width, screen_height))
             screen.blit(frame, (0, 0))
 
-        # Desenha os quadrados
         for square in squares:
             pygame.draw.rect(screen, square['color'], square['draw'])
 
-        # Exibe informações: FPS, pontuação, combo e tempo restante
         fps = int(clock.get_fps())
         fps_text = font.render(f"FPS: {fps}", True, (0, 255, 0))
         screen.blit(fps_text, (10, 10))
@@ -162,6 +154,21 @@ def pygame_loop(frame_queue, hand_position_queue):
 
     pygame.quit()
 
+def restart_camera(frame_queue, hand_position_queue, width, height, terminate_event):
+    """
+    Reinicia o processo da câmera.
+    """
+    terminate_event.set()  # Primeiro, termina o processo atual da câmera
+    terminate_event.clear()  # Limpa o evento para reiniciar
+
+    # Recria o processo da câmera
+    camera_process = mp_proc.Process(
+        target=process_camera,
+        args=(frame_queue, hand_position_queue, width, height, terminate_event)
+    )
+    camera_process.start()
+    return camera_process
+
 def main():
     pygame.init()
     info = pygame.display.Info()
@@ -170,15 +177,16 @@ def main():
 
     frame_queue = mp_proc.Queue(maxsize=1)
     hand_position_queue = mp_proc.Queue(maxsize=1)
-    
-    camera_process = mp_proc.Process(target=process_camera, args=(frame_queue, hand_position_queue, width, height))
-    camera_process.start()
-    
-    pygame_thread = threading.Thread(target=pygame_loop, args=(frame_queue, hand_position_queue))
-    pygame_thread.start()
-    
-    pygame_thread.join()
-    camera_process.terminate()
-    
+    terminate_event = mp_proc.Event()  # Evento para sinalizar o término
+
+    # Reinicia a câmera ao iniciar
+    camera_process = restart_camera(frame_queue, hand_position_queue, width, height, terminate_event)
+
+    pygame_loop(frame_queue, hand_position_queue)
+
+    # Sinaliza para o processo da câmera encerrar o loop e liberar o dispositivo
+    terminate_event.set()
+    camera_process.join()
+
 if __name__ == "__main__":
     main()
