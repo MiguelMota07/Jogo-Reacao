@@ -8,7 +8,7 @@ def insert_score(score, nome):
         conexao = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="",
+            password="root",
             database="expocic"
         )
         cursor = conexao.cursor()
