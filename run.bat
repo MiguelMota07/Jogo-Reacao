@@ -1,1 +1,2 @@
-python index.py
+py src/layoutIMSI.py
+pause
