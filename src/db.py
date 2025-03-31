@@ -16,7 +16,7 @@ def buscar_top_reacoes():
     posicao = 1
     for nome, tempo in resultados:
         # Aqui usamos a formatação de 3 casas decimais
-        top_reacoes.append(f"{posicao}. {nome} - {tempo:.3f}s")
+        top_reacoes.append(f"{posicao}. {nome} - {double(tempo):.3f}s")
         posicao += 1
     return top_reacoes
 
