@@ -22,3 +22,5 @@ py -m pip install psutil
 5º pip install --upgrade mysql-connector-python
 
 6º colocar base de dados
+
+(Defenições->Privacidade e segurança->Câmera->Definições do dispositivo da câmara->Selecionar a câmera desejada->Opções avançadas-> Ligar Permitir que várias aplicações utilizem a câmara ao mesmo tempo)
