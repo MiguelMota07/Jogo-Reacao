@@ -4,7 +4,7 @@ def buscar_top_reacoes():
     conexao = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",
+        password="root",
         database="expocic"
     )
     cursor = conexao.cursor()
@@ -25,7 +25,7 @@ def buscar_top_movimentos():
         conexao = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="",
+            password="root",
             database="expocic"
         )
         cursor = conexao.cursor()
